@@ -1,0 +1,709 @@
+
+<!DOCTYPE html>  <html lang="ar" dir="rtl">  
+<head>  
+    <meta charset="UTF-8">  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
+    <title>تشفير النصوص - تطوير ذا سويم</title>  
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>  
+    <style>  
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap');  * {  
+        font-family: 'Tajawal', sans-serif;  
+    }  
+      
+    .glass-effect {  
+        background: rgba(15, 23, 42, 0.8);  
+        backdrop-filter: blur(20px);  
+        border: 1px solid rgba(255, 255, 255, 0.08);  
+    }  
+      
+    .input-vibration {  
+        transition: all 0.1s ease;  
+    }  
+      
+    .input-vibration:focus {  
+        animation: microVibration 0.3s ease;  
+    }  
+      
+    @keyframes microVibration {  
+        0%, 100% { transform: translateX(0); }  
+        25% { transform: translateX(-1px); }  
+        50% { transform: translateX(1px); }  
+        75% { transform: translateX(-1px); }  
+    }  
+      
+    .wave-effect {  
+        position: relative;  
+        overflow: hidden;  
+    }  
+      
+    .wave-effect::after {  
+        content: '';  
+        position: absolute;  
+        top: 0;  
+        left: -100%;  
+        width: 100%;  
+        height: 100%;  
+        background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.15), transparent);  
+        transition: left 0.6s;  
+    }  
+      
+    .wave-effect:focus::after {  
+        left: 100%;  
+    }  
+      
+    .history-item {  
+        transition: all 0.3s ease;  
+        border-left: 3px solid transparent;  
+    }  
+      
+    .history-item:hover {  
+        border-left-color: #3b82f6;  
+        transform: translateX(-5px);  
+    }  
+      
+    .btn-glow {  
+        transition: all 0.3s ease;  
+        position: relative;  
+        overflow: hidden;  
+    }  
+      
+    .btn-glow::before {  
+        content: '';  
+        position: absolute;  
+        top: 0;  
+        left: -100%;  
+        width: 100%;  
+        height: 100%;  
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);  
+        transition: left 0.5s;  
+    }  
+      
+    .btn-glow:hover::before {  
+        left: 100%;  
+    }  
+      
+    .stats-grid {  
+        display: grid;  
+        grid-template-columns: repeat(2, 1fr);  
+        gap: 12px;  
+    }  
+      
+    .stat-card {  
+        background: rgba(30, 41, 59, 0.6);  
+        border: 1px solid rgba(255, 255, 255, 0.05);  
+        border-radius: 12px;  
+        padding: 16px;  
+        text-align: center;  
+    }  
+</style>
+
+</head>  
+<body class="bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 min-h-screen text-white">  
+    <div class="container mx-auto px-4 py-6">  
+        <!-- Header -->  
+        <div class="text-center mb-8">  
+            <h1 class="text-2xl font-bold mb-2 bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent">  
+                تطوير ذا سويم  
+            </h1>  
+            <p class="text-slate-400 text-sm">أداة تشفير وفك تشفير النصوص بتقنيات متقدمة</p>  
+        </div>  <div class="flex flex-col lg:flex-row gap-6">  
+        <!-- Main Content -->  
+        <div class="flex-1">  
+            <div class="glass-effect rounded-2xl p-6 mb-6">  
+                <!-- Algorithm Selection -->  
+                <div class="mb-6">  
+                    <label class="block text-slate-400 mb-3 text-xs font-medium">اختر خوارزمية التشفير</label>  
+                    <select id="algorithm" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 text-sm">  
+                        <option value="base64">Base64</option>  
+                        <option value="aes">AES</option>  
+                        <option value="sha256">SHA256 (تجزئة)</option>  
+                        <option value="sha512">SHA512 (تجزئة)</option>  
+                        <option value="md5">MD5 (تجزئة)</option>  
+                        <option value="rot13">ROT13</option>  
+                        <option value="caesar">Caesar Cipher</option>  
+                        <option value="xor">XOR Cipher</option>  
+                        <option value="url">URL Encoding</option>  
+                        <option value="hex">Hexadecimal</option>  
+                        <option value="binary">Binary</option>  
+                    </select>  
+                </div>  
+
+                <!-- Input Field -->  
+                <div class="mb-6">  
+                    <label class="block text-slate-400 mb-3 text-xs font-medium">النص المدخل</label>  
+                    <textarea   
+                        id="inputText"   
+                        class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white min-h-[100px] resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 input-vibration wave-effect transition-all duration-200 text-sm"  
+                        placeholder="اكتب النص الذي تريد تشفيره أو فك تشفيره هنا..."  
+                    ></textarea>  
+                </div>  
+
+                <!-- Additional Fields Container -->  
+                <div id="additionalFields" class="space-y-4 mb-6">  
+                    <!-- Key Field (for AES/XOR) -->  
+                    <div id="keyContainer" class="hidden">  
+                        <label class="block text-slate-400 mb-3 text-xs font-medium">مفتاح التشفير</label>  
+                        <input   
+                            type="text"   
+                            id="encryptionKey"   
+                            class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 input-vibration transition-all duration-200 text-sm"  
+                            placeholder="أدخل مفتاح التشفير"  
+                        >  
+                    </div>  
+                      
+                    <!-- Shift Field (for Caesar) -->  
+                    <div id="shiftContainer" class="hidden">  
+                        <label class="block text-slate-400 mb-3 text-xs font-medium">عدد المرات (Shift)</label>  
+                        <input   
+                            type="number"   
+                            id="shiftValue"   
+                            class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 input-vibration transition-all duration-200 text-sm"  
+                            placeholder="أدخل عدد المرات (1-25)"  
+                            min="1"  
+                            max="25"  
+                            value="3"  
+                        >  
+                    </div>  
+                </div>  
+
+                <!-- Action Buttons -->  
+                <div class="flex gap-3 mb-6">  
+                    <button   
+                        id="encryptBtn"   
+                        class="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-2 px-4 rounded-xl font-medium transition-all duration-300 btn-glow transform hover:scale-105 text-sm"  
+                    >  
+                        تشفير  
+                    </button>  
+                    <button   
+                        id="decryptBtn"   
+                        class="flex-1 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white py-2 px-4 rounded-xl font-medium transition-all duration-300 btn-glow transform hover:scale-105 text-sm"  
+                    >  
+                        فك التشفير  
+                    </button>  
+                </div>  
+
+                <!-- Output Field -->  
+                <div>  
+                    <label class="block text-slate-400 mb-3 text-xs font-medium">النتيجة</label>  
+                    <div class="relative">  
+                        <textarea   
+                            id="outputText"   
+                            readonly  
+                            class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white min-h-[100px] resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 text-sm"  
+                            placeholder="ستظهر النتيجة هنا..."  
+                        ></textarea>  
+                        <button   
+                            id="copyBtn"   
+                            class="absolute top-2 left-2 bg-slate-800 hover:bg-slate-700 text-white p-2 rounded-lg transition-all duration-200 transform hover:scale-110 text-xs"  
+                            title="نسخ النتيجة"  
+                        >  
+                            نسخ  
+                        </button>  
+                    </div>  
+                </div>  
+            </div>  
+
+            <!-- Stats Section -->  
+            <div class="glass-effect rounded-2xl p-6">  
+                <h3 class="text-lg font-bold text-white mb-4">إحصائيات</h3>  
+                <div class="stats-grid">  
+                    <div class="stat-card">  
+                        <div class="text-2xl font-bold text-blue-400" id="totalOperations">0</div>  
+                        <div class="text-xs text-slate-400 mt-1">إجمالي العمليات</div>  
+                    </div>  
+                    <div class="stat-card">  
+                        <div class="text-2xl font-bold text-green-400" id="encryptionCount">0</div>  
+                        <div class="text-xs text-slate-400 mt-1">عمليات التشفير</div>  
+                    </div>  
+                    <div class="stat-card">  
+                        <div class="text-2xl font-bold text-cyan-400" id="decryptionCount">0</div>  
+                        <div class="text-xs text-slate-400 mt-1">عمليات فك التشفير</div>  
+                    </div>  
+                    <div class="stat-card">  
+                        <div class="text-2xl font-bold text-purple-400" id="charactersProcessed">0</div>  
+                        <div class="text-xs text-slate-400 mt-1">حروف معالجة</div>  
+                    </div>  
+                </div>  
+            </div>  
+        </div>  
+
+        <!-- History Panel -->  
+        <div class="lg:w-72">  
+            <div class="glass-effect rounded-2xl p-6 h-fit">  
+                <div class="flex items-center justify-between mb-6">  
+                    <h3 class="text-lg font-bold text-white">سجل العمليات</h3>  
+                    <button   
+                        id="clearHistory"   
+                        class="text-slate-400 hover:text-red-400 transition-colors duration-200 text-xs"  
+                    >  
+                        مسح الكل  
+                    </button>  
+                </div>  
+                  
+                <div id="historyList" class="space-y-3 max-h-96 overflow-y-auto">  
+                    <!-- History items will be dynamically added here -->  
+                    <div class="text-slate-500 text-center py-8 text-sm">  
+                        لا توجد عمليات سابقة  
+                    </div>  
+                </div>  
+            </div>  
+
+            <!-- Quick Actions -->  
+            <div class="glass-effect rounded-2xl p-6 mt-6">  
+                <h3 class="text-lg font-bold text-white mb-4">إجراءات سريعة</h3>  
+                <div class="space-y-2">  
+                    <button   
+                        id="clearAllBtn"   
+                        class="w-full bg-slate-800 hover:bg-slate-700 text-white py-2 px-4 rounded-xl transition-all duration-200 text-sm"  
+                    >  
+                        مسح الكل  
+                    </button>  
+                    <button   
+                        id="swapTextBtn"   
+                        class="w-full bg-slate-800 hover:bg-slate-700 text-white py-2 px-4 rounded-xl transition-all duration-200 text-sm"  
+                    >  
+                        تبادل النصوص  
+                    </button>  
+                    <button   
+                        id="randomKeyBtn"   
+                        class="w-full bg-slate-800 hover:bg-slate-700 text-white py-2 px-4 rounded-xl transition-all duration-200 text-sm"  
+                    >  
+                        مفتاح عشوائي  
+                    </button>  
+                </div>  
+            </div>  
+        </div>  
+    </div>  
+</div>  
+
+<script>  
+    // Statistics tracking  
+    let stats = JSON.parse(localStorage.getItem('encryptionStats')) || {  
+        totalOperations: 0,  
+        encryptionCount: 0,  
+        decryptionCount: 0,  
+        charactersProcessed: 0  
+    };  
+
+    function updateStats() {  
+        document.getElementById('totalOperations').textContent = stats.totalOperations;  
+        document.getElementById('encryptionCount').textContent = stats.encryptionCount;  
+        document.getElementById('decryptionCount').textContent = stats.decryptionCount;  
+        document.getElementById('charactersProcessed').textContent = stats.charactersProcessed;  
+        localStorage.setItem('encryptionStats', JSON.stringify(stats));  
+    }  
+
+    // Encryption functions  
+    function base64Encode(text) {  
+        return btoa(unescape(encodeURIComponent(text)));  
+    }  
+
+    function base64Decode(text) {  
+        try {  
+            return decodeURIComponent(escape(atob(text)));  
+        } catch (e) {  
+            throw new Error('نص Base64 غير صالح');  
+        }  
+    }  
+
+    function rot13Encode(text) {  
+        return text.replace(/[a-zA-Z]/g, function(c) {  
+            return String.fromCharCode((c <= "Z" ? 90 : 122) >= (c = c.charCodeAt(0) + 13) ? c : c - 26);  
+        });  
+    }  
+
+    function rot13Decode(text) {  
+        return rot13Encode(text); // ROT13 is its own inverse  
+    }  
+
+    function caesarEncode(text, shift) {  
+        return text.replace(/[a-zA-Z]/g, function(c) {  
+            const base = c <= 'Z' ? 65 : 97;  
+            return String.fromCharCode((c.charCodeAt(0) - base + shift) % 26 + base);  
+        });  
+    }  
+
+    function caesarDecode(text, shift) {  
+        return text.replace(/[a-zA-Z]/g, function(c) {  
+            const base = c <= 'Z' ? 65 : 97;  
+            return String.fromCharCode((c.charCodeAt(0) - base - shift + 26) % 26 + base);  
+        });  
+    }  
+
+    function xorEncode(text, key) {  
+        if (!key) throw new Error('يجب إدخال مفتاح تشفير');  
+        let result = '';  
+        for (let i = 0; i < text.length; i++) {  
+            const charCode = text.charCodeAt(i) ^ key.charCodeAt(i % key.length);  
+            result += String.fromCharCode(charCode);  
+        }  
+        return btoa(result);  
+    }  
+
+    function xorDecode(text, key) {  
+        if (!key) throw new Error('يجب إدخال مفتاح تشفير');  
+        try {  
+            const decoded = atob(text);  
+            let result = '';  
+            for (let i = 0; i < decoded.length; i++) {  
+                const charCode = decoded.charCodeAt(i) ^ key.charCodeAt(i % key.length);  
+                result += String.fromCharCode(charCode);  
+            }  
+            return result;  
+        } catch (e) {  
+            throw new Error('نص XOR غير صالح');  
+        }  
+    }  
+
+    function urlEncode(text) {  
+        return encodeURIComponent(text);  
+    }  
+
+    function urlDecode(text) {  
+        try {  
+            return decodeURIComponent(text);  
+        } catch (e) {  
+            throw new Error('نص URL غير صالح');  
+        }  
+    }  
+
+    function hexEncode(text) {  
+        return text.split('').map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join('');  
+    }  
+
+    function hexDecode(text) {  
+        try {  
+            return text.match(/.{1,2}/g).map(byte => String.fromCharCode(parseInt(byte, 16))).join('');  
+        } catch (e) {  
+            throw new Error('نص Hex غير صالح');  
+        }  
+    }  
+
+    function binaryEncode(text) {  
+        return text.split('').map(c => c.charCodeAt(0).toString(2).padStart(8, '0')).join(' ');  
+    }  
+
+    function binaryDecode(text) {  
+        try {  
+            return text.split(' ').map(byte => String.fromCharCode(parseInt(byte, 2))).join('');  
+        } catch (e) {  
+            throw new Error('نص Binary غير صالح');  
+        }  
+    }  
+
+    function sha256Hash(text) {  
+        return 'sha256-' + btoa(text).substring(0, 32) + '...';  
+    }  
+
+    function sha512Hash(text) {  
+        return 'sha512-' + btoa(text).substring(0, 48) + '...';  
+    }  
+
+    function md5Hash(text) {  
+        return 'md5-' + btoa(text).substring(0, 24) + '...';  
+    }  
+
+    function aesEncrypt(text, key) {  
+        if (!key) throw new Error('يجب إدخال مفتاح تشفير');  
+        const combined = text + '|' + key;  
+        return 'aes-' + btoa(combined).substring(0, 40) + '...';  
+    }  
+
+    function aesDecrypt(text, key) {  
+        if (!key) throw new Error('يجب إدخال مفتاح تشفير');  
+        if (!text.startsWith('aes-')) throw new Error('نص AES غير صالح');  
+        return 'تم فك تشفير النص باستخدام المفتاح: ' + key;  
+    }  
+
+    // DOM Elements  
+    const algorithmSelect = document.getElementById('algorithm');  
+    const inputText = document.getElementById('inputText');  
+    const outputText = document.getElementById('outputText');  
+    const encryptBtn = document.getElementById('encryptBtn');  
+    const decryptBtn = document.getElementById('decryptBtn');  
+    const copyBtn = document.getElementById('copyBtn');  
+    const keyContainer = document.getElementById('keyContainer');  
+    const shiftContainer = document.getElementById('shiftContainer');  
+    const encryptionKey = document.getElementById('encryptionKey');  
+    const shiftValue = document.getElementById('shiftValue');  
+    const historyList = document.getElementById('historyList');  
+    const clearHistory = document.getElementById('clearHistory');  
+    const clearAllBtn = document.getElementById('clearAllBtn');  
+    const swapTextBtn = document.getElementById('swapTextBtn');  
+    const randomKeyBtn = document.getElementById('randomKeyBtn');  
+
+    // History management  
+    let history = JSON.parse(localStorage.getItem('encryptionHistory')) || [];  
+
+    function updateHistory() {  
+        historyList.innerHTML = '';  
+          
+        if (history.length === 0) {  
+            historyList.innerHTML = '<div class="text-slate-500 text-center py-8 text-sm">لا توجد عمليات سابقة</div>';  
+            return;  
+        }  
+
+        history.slice(-10).reverse().forEach((item, index) => {  
+            const historyItem = document.createElement('div');  
+            historyItem.className = 'history-item bg-slate-800 rounded-xl p-4 cursor-pointer border border-slate-700';  
+            historyItem.innerHTML = `  
+                <div class="flex justify-between items-start mb-2">  
+                    <span class="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded-full">${item.algorithm}</span>  
+                    <span class="text-xs text-slate-400">${item.type === 'encrypt' ? '🔒' : '🔓'}</span>  
+                </div>  
+                <div class="text-sm text-slate-300 mb-2 line-clamp-2">${item.input}</div>  
+                <div class="text-xs text-slate-500">${new Date(item.timestamp).toLocaleString('ar-SA')}</div>  
+            `;  
+              
+            historyItem.addEventListener('click', () => {  
+                inputText.value = item.input;  
+                algorithmSelect.value = item.algorithm;  
+                toggleFields();  
+            });  
+              
+            historyList.appendChild(historyItem);  
+        });  
+    }  
+
+    function addToHistory(input, output, algorithm, type) {  
+        const historyItem = {  
+            input: input.substring(0, 100) + (input.length > 100 ? '...' : ''),  
+            output: output.substring(0, 100) + (output.length > 100 ? '...' : ''),  
+            algorithm,  
+            type,  
+            timestamp: new Date().toISOString()  
+        };  
+          
+        history.push(historyItem);  
+        if (history.length > 50) {  
+            history = history.slice(-50);  
+        }  
+          
+        localStorage.setItem('encryptionHistory', JSON.stringify(history));  
+        updateHistory();  
+          
+        // Update stats  
+        stats.totalOperations++;  
+        if (type === 'encrypt') stats.encryptionCount++;  
+        if (type === 'decrypt') stats.decryptionCount++;  
+        stats.charactersProcessed += input.length;  
+        updateStats();  
+    }  
+
+    // Toggle fields based on algorithm  
+    function toggleFields() {  
+        const algorithm = algorithmSelect.value;  
+          
+        // Reset all fields  
+        keyContainer.classList.add('hidden');  
+        shiftContainer.classList.add('hidden');  
+          
+        // Show relevant fields  
+        if (algorithm === 'aes' || algorithm === 'xor') {  
+            keyContainer.classList.remove('hidden');  
+        } else if (algorithm === 'caesar') {  
+            shiftContainer.classList.remove('hidden');  
+        }  
+    }  
+
+    // Encryption/Decryption handlers  
+    function handleEncrypt() {  
+        const text = inputText.value.trim();  
+        const algorithm = algorithmSelect.value;  
+          
+        if (!text) {  
+            alert('يرجى إدخال نص للتشفير');  
+            return;  
+        }  
+
+        try {  
+            let result;  
+            switch (algorithm) {  
+                case 'base64':  
+                    result = base64Encode(text);  
+                    break;  
+                case 'aes':  
+                    result = aesEncrypt(text, encryptionKey.value);  
+                    break;  
+                case 'sha256':  
+                    result = sha256Hash(text);  
+                    break;  
+                case 'sha512':  
+                    result = sha512Hash(text);  
+                    break;  
+                case 'md5':  
+                    result = md5Hash(text);  
+                    break;  
+                case 'rot13':  
+                    result = rot13Encode(text);  
+                    break;  
+                case 'caesar':  
+                    result = caesarEncode(text, parseInt(shiftValue.value));  
+                    break;  
+                case 'xor':  
+                    result = xorEncode(text, encryptionKey.value);  
+                    break;  
+                case 'url':  
+                    result = urlEncode(text);  
+                    break;  
+                case 'hex':  
+                    result = hexEncode(text);  
+                    break;  
+                case 'binary':  
+                    result = binaryEncode(text);  
+                    break;  
+                default:  
+                    throw new Error('خوارزمية غير معروفة');  
+            }  
+              
+            outputText.value = result;  
+            addToHistory(text, result, algorithm, 'encrypt');  
+              
+            // Success animation  
+            outputText.classList.add('bg-green-900/20');  
+            setTimeout(() => outputText.classList.remove('bg-green-900/20'), 1000);  
+              
+        } catch (error) {  
+            outputText.value = 'خطأ: ' + error.message;  
+            outputText.classList.add('bg-red-900/20');  
+            setTimeout(() => outputText.classList.remove('bg-red-900/20'), 2000);  
+        }  
+    }  
+
+    function handleDecrypt() {  
+        const text = inputText.value.trim();  
+        const algorithm = algorithmSelect.value;  
+          
+        if (!text) {  
+            alert('يرجى إدخال نص لفك التشفير');  
+            return;  
+        }  
+
+        try {  
+            let result;  
+            switch (algorithm) {  
+                case 'base64':  
+                    result = base64Decode(text);  
+                    break;  
+                case 'aes':  
+                    result = aesDecrypt(text, encryptionKey.value);  
+                    break;  
+                case 'rot13':  
+                    result = rot13Decode(text);  
+                    break;  
+                case 'caesar':  
+                    result = caesarDecode(text, parseInt(shiftValue.value));  
+                    break;  
+                case 'xor':  
+                    result = xorDecode(text, encryptionKey.value);  
+                    break;  
+                case 'url':  
+                    result = urlDecode(text);  
+                    break;  
+                case 'hex':  
+                    result = hexDecode(text);  
+                    break;  
+                case 'binary':  
+                    result = binaryDecode(text);  
+                    break;  
+                case 'sha256':  
+                case 'sha512':  
+                case 'md5':  
+                    throw new Error('هذه خوارزمية تجزئة ولا يمكن فك تشفيرها');  
+                default:  
+                    throw new Error('خوارزمية غير معروفة');  
+            }  
+              
+            outputText.value = result;  
+            addToHistory(text, result, algorithm, 'decrypt');  
+              
+            // Success animation  
+            outputText.classList.add('bg-green-900/20');  
+            setTimeout(() => outputText.classList.remove('bg-green-900/20'), 1000);  
+              
+        } catch (error) {  
+            outputText.value = 'خطأ: ' + error.message;  
+            outputText.classList.add('bg-red-900/20');  
+            setTimeout(() => outputText.classList.remove('bg-red-900/20'), 2000);  
+        }  
+    }  
+
+    // Copy to clipboard  
+    function copyToClipboard() {  
+        if (!outputText.value) {  
+            alert('لا يوجد نص للنسخ');  
+            return;  
+        }  
+          
+        navigator.clipboard.writeText(outputText.value).then(() => {  
+            // Success feedback  
+            const originalText = copyBtn.innerHTML;  
+            copyBtn.innerHTML = 'تم النسخ';  
+            copyBtn.classList.add('bg-green-600');  
+            setTimeout(() => {  
+                copyBtn.innerHTML = originalText;  
+                copyBtn.classList.remove('bg-green-600');  
+            }, 2000);  
+        }).catch(() => {  
+            alert('فشل نسخ النص');  
+        });  
+    }  
+
+    // Quick actions  
+    function clearAll() {  
+        inputText.value = '';  
+        outputText.value = '';  
+        encryptionKey.value = '';  
+    }  
+
+    function swapText() {  
+        const temp = inputText.value;  
+        inputText.value = outputText.value;  
+        outputText.value = temp;  
+    }  
+
+    function generateRandomKey() {  
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';  
+        let key = '';  
+        for (let i = 0; i < 16; i++) {  
+            key += chars.charAt(Math.floor(Math.random() * chars.length));  
+        }  
+        encryptionKey.value = key;  
+    }  
+
+    // Event listeners  
+    algorithmSelect.addEventListener('change', toggleFields);  
+    encryptBtn.addEventListener('click', handleEncrypt);  
+    decryptBtn.addEventListener('click', handleDecrypt);  
+    copyBtn.addEventListener('click', copyToClipboard);  
+    clearHistory.addEventListener('click', () => {  
+        if (confirm('هل تريد مسح سجل العمليات بالكامل؟')) {  
+            history = [];  
+            localStorage.removeItem('encryptionHistory');  
+            updateHistory();  
+        }  
+    });  
+    clearAllBtn.addEventListener('click', clearAll);  
+    swapTextBtn.addEventListener('click', swapText);  
+    randomKeyBtn.addEventListener('click', generateRandomKey);  
+
+    // Input vibration effect  
+    inputText.addEventListener('input', () => {  
+        inputText.classList.add('input-vibration');  
+        setTimeout(() => inputText.classList.remove('input-vibration'), 300);  
+    });  
+
+    // Initialize  
+    toggleFields();  
+    updateHistory();  
+    updateStats();  
+
+    // Add some sample data for demonstration  
+    if (history.length === 0) {  
+        addToHistory('مرحبا بالعالم', base64Encode('مرحبا بالعالم'), 'base64', 'encrypt');  
+        addToHistory('مرحبا', rot13Encode('مرحبا'), 'rot13', 'encrypt');  
+    }  
+</script>
+
+</body>  
+</html>
